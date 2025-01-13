@@ -37,7 +37,8 @@
     "react-native-gesture-handler": "~2.20.2",
     "expo-notifications": "~0.29.12",
     "expo-background-fetch": "~13.0.4",
-    "expo-task-manager": "~12.0.4"
+    "expo-task-manager": "~12.0.4",
+    "expo-dev-client": "~5.0.9"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
