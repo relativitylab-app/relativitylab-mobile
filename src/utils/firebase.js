@@ -29,7 +29,7 @@ const db = getFirestore(app);
 
 // Configure Google Sign In
 GoogleSignin.configure({
-  webClientId: '296786551041-c9vbh0ir72dgckrahtuakqprgeq036mb.apps.googleusercontent.com', // dari Firebase Console
+  webClientId: '296786551041-c9vbh0ir72dgckrahtuakqprgeq036mb.apps.googleusercontent.com',
 });
 
 export { auth, db };

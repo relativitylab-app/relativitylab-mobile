@@ -1,19 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { GLView } from 'expo-gl';
 import { Renderer } from 'expo-three';
 import { Scene, PerspectiveCamera, SphereGeometry, MeshBasicMaterial, Mesh } from 'three';
-import Header from '../components/Header';
-import { useAuth } from '../contexts/AuthContext';
 
-const HomeScreen = ({ navigation }) => {
-  const { user } = useAuth();
+const LoadingScreen = ({ message = 'Loading...' }) => {
   let timeout;
 
   const onContextCreate = async (gl) => {
     const scene = new Scene();
     const camera = new PerspectiveCamera(
-      75, 
+      75,
       gl.drawingBufferWidth / gl.drawingBufferHeight,
       0.1,
       1000
@@ -48,22 +45,13 @@ const HomeScreen = ({ navigation }) => {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header />
+    <View style={styles.container}>
       <GLView style={styles.glView} onContextCreate={onContextCreate} />
       <View style={styles.content}>
-        <Text style={styles.title}>RelativityLab</Text>
-        <Text style={styles.subtitle}>
-          Warp Space, Bend Time.
-        </Text>
-        <TouchableOpacity 
-          style={styles.button}
-          onPress={() => navigation.navigate('Playground')}
-        >
-          <Text style={styles.buttonText}>Explore RelativityLab</Text>
-        </TouchableOpacity>
+        <ActivityIndicator size="large" color="#1d4ed8" />
+        <Text style={styles.text}>{message}</Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -78,30 +66,14 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#ffffff',
-    marginBottom: 30,
-  },
-  button: {
-    backgroundColor: '#1d4ed8',
-    padding: 15,
-    borderRadius: 8,
     alignItems: 'center',
+    gap: 16,
   },
-  buttonText: {
+  text: {
     color: '#ffffff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '500',
   },
 });
 
-export default HomeScreen;
+export default LoadingScreen;
