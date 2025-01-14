@@ -13,7 +13,6 @@ export default {
       },
       android: {
         package: "com.relativitylab.app",
-        googleServicesFile: process.env.GOOGLE_SERVICES_JSON || "./android/app/google-services.json",
         adaptiveIcon: {
           foregroundImage: "./assets/adaptive-icon.png",
           backgroundColor: "#000000"
