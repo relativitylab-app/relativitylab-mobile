@@ -12,9 +12,7 @@
         "gradleCommand": ":app:assembleDebug"
       },
       "env": {
-        "GOOGLE_SERVICES_JSON": {
-          "fromSecret": "GOOGLE_SERVICES_JSON"
-        }
+        "GOOGLE_SERVICES_JSON_BASE64": "$GOOGLE_SERVICES_JSON"
       }
     },
     "preview": {
