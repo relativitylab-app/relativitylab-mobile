@@ -10,6 +10,11 @@
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleDebug"
+      },
+      "env": {
+        "GOOGLE_SERVICES_JSON": {
+          "fromSecret": "GOOGLE_SERVICES_JSON"
+        }
       }
     },
     "preview": {
