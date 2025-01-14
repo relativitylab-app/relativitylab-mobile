@@ -11,9 +11,7 @@
         "buildType": "apk",
         "gradleCommand": ":app:assembleDebug"
       },
-      "env": {
-        "GOOGLE_SERVICES_JSON_BASE64": "$GOOGLE_SERVICES_JSON"
-      }
+      "environment": "development"
     },
     "preview": {
       "distribution": "internal"
