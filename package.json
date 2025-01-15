@@ -25,6 +25,7 @@
     "expo-dev-client": "~5.0.9",
     "expo-font": "~13.0.3",
     "expo-gl": "^15.0.3",
+    "expo-module-scripts": "^4.0.3",
     "expo-notifications": "~0.29.12",
     "expo-random": "^14.0.1",
     "expo-splash-screen": "~0.29.20",
