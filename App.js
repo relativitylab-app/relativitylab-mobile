@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import HomeScreen from './src/screens/HomeScreen';
@@ -16,19 +17,29 @@ import LoadingScreen from './src/components/LoadingScreen';
 
 const Tab = createBottomTabNavigator();
 
+// Initialize Google Sign In
+GoogleSignin.configure({
+  webClientId: '296786551041-c9vbh0ir72dgckrahtuakqprgeq036mb.apps.googleusercontent.com', // Get this from Firebase Console
+});
+
 // Prevent auto hiding splash screen
 SplashScreen.preventAutoHideAsync();
 
 function MainApp() {
   const { loading } = useAuth();
-  const [fontsLoaded] = useFonts({
-    // Add any custom fonts here if needed
-  });
+  const [fontsLoaded] = useFonts();
 
   React.useEffect(() => {
-    if (fontsLoaded && !loading) {
-      SplashScreen.hideAsync();
+    async function prepare() {
+      try {
+        if (fontsLoaded && !loading) {
+          await SplashScreen.hideAsync();
+        }
+      } catch (e) {
+        console.warn(e);
+      }
     }
+    prepare();
   }, [fontsLoaded, loading]);
 
   if (loading || !fontsLoaded) {
@@ -42,7 +53,6 @@ function MainApp() {
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused, color, size }) => {
             let iconName;
-
             if (route.name === 'Home') {
               iconName = focused ? 'home' : 'home-outline';
             } else if (route.name === 'Playground') {
@@ -52,7 +62,6 @@ function MainApp() {
             } else if (route.name === 'Profile') {
               iconName = focused ? 'person' : 'person-outline';
             }
-
             return <Ionicons name={iconName} size={size} color={color} />;
           },
           tabBarStyle: {
