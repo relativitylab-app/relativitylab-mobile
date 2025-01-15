@@ -1,0 +1,46 @@
+{
+    "project_info": {
+      "project_number": "296786551041",
+      "project_id": "relativitylab",
+      "storage_bucket": "relativitylab.firebasestorage.app"
+    },
+    "client": [
+      {
+        "client_info": {
+          "mobilesdk_app_id": "1:296786551041:android:9146b5f5b48d500bea3b00",
+          "android_client_info": {
+            "package_name": "com.relativitylab.app"
+          }
+        },
+        "oauth_client": [
+          {
+            "client_id": "296786551041-c9vbh0ir72dgckrahtuakqprgeq036mb.apps.googleusercontent.com",
+            "client_type": 3
+          }
+        ],
+        "api_key": [
+          {
+            "current_key": "AIzaSyA4DZvrq4e5zY4KfsZgkph8n2wT06AlP2o"
+          }
+        ],
+        "services": {
+          "appinvite_service": {
+            "other_platform_oauth_client": [
+              {
+                "client_id": "296786551041-c9vbh0ir72dgckrahtuakqprgeq036mb.apps.googleusercontent.com",
+                "client_type": 3
+              },
+              {
+                "client_id": "296786551041-k4ivh5404a7nbmjflv55utruupmi43g0.apps.googleusercontent.com",
+                "client_type": 2,
+                "ios_info": {
+                  "bundle_id": "com.relativitylab.app"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "configuration_version": "1"
+  }
