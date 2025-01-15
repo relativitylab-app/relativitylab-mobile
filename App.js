@@ -19,15 +19,16 @@ const Tab = createBottomTabNavigator();
 
 // Initialize Google Sign In
 GoogleSignin.configure({
-  webClientId: '296786551041-c9vbh0ir72dgckrahtuakqprgeq036mb.apps.googleusercontent.com', // Get this from Firebase Console
+  webClientId: '296786551041-c9vbh0ir72dgckrahtuakqprgeq036mb.apps.googleusercontent.com',
 });
 
-// Prevent auto hiding splash screen
 SplashScreen.preventAutoHideAsync();
 
 function MainApp() {
   const { loading } = useAuth();
-  const [fontsLoaded] = useFonts();
+  const [fontsLoaded] = useFonts({
+    'Ionicons': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf'),
+  });
 
   React.useEffect(() => {
     async function prepare() {
@@ -42,7 +43,7 @@ function MainApp() {
     prepare();
   }, [fontsLoaded, loading]);
 
-  if (loading || !fontsLoaded) {
+  if (!fontsLoaded || loading) {
     return <LoadingScreen message="Initializing RelativityLab..." />;
   }
 
