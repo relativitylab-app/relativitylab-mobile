@@ -15,6 +15,8 @@ import PlaygroundScreen from './src/screens/PlaygroundScreen';
 import ExerciseScreen from './src/screens/ExerciseScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import LoadingScreen from './src/components/LoadingScreen';
+import { enableScreens } from 'react-native-screens';
+enableScreens();
 
 const Tab = createBottomTabNavigator();
 
