@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import ErrorBoundary from './src/components/ErrorBoundary';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
 
