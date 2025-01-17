@@ -8,17 +8,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { user, menu } from "@/constants/data";
 import images from "@/constants/image";
-import { Redirect } from "expo-router";
+import { Redirect, Link } from "expo-router";
 
 export default function Index() {
-  const goToPlayground = () => {
-    return <Redirect href="/playground" />;
-  }
-
-  const goToQuiz = () => {
-    return <Redirect href="/quiz" />;
-  }
-
   return (
     <SafeAreaView className="h-full bg-white">
       <View className="px-5">
@@ -41,9 +33,9 @@ export default function Index() {
         </View>
         <View className="my-5">
             <TouchableOpacity
-              onPress={goToPlayground}
               className="flex flex-col items-start w-full h-80 relative my-2"
-            >
+            > 
+              
               <Image source={menu[0].image} className="size-full rounded-2xl" />
         
               <Image
@@ -52,16 +44,18 @@ export default function Index() {
               />
         
               <View className="flex flex-col items-start absolute bottom-5 inset-x-5">
-                <Text
-                  className="text-xl font-rubik-extrabold text-white"
-                  numberOfLines={1}
-                >
-                  {menu[0].name}
-                </Text>
+                <Link href="/playground">
+                  <Text
+                    className="text-xl font-rubik-extrabold text-white"
+                    numberOfLines={1}
+                  >
+                    {menu[0].name}
+                  </Text>
+                </Link>
               </View>
+              
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={goToQuiz}
               className="flex flex-col items-start w-full h-80 relative my-2"
             >
               <Image source={menu[1].image} className="size-full rounded-2xl" />
@@ -72,12 +66,14 @@ export default function Index() {
               />
         
               <View className="flex flex-col items-start absolute bottom-5 inset-x-5">
-                <Text
-                  className="text-xl font-rubik-extrabold text-white"
-                  numberOfLines={1}
-                >
-                  {menu[1].name}
-                </Text>
+                <Link href="/quiz">
+                  <Text
+                    className="text-xl font-rubik-extrabold text-white"
+                    numberOfLines={1}
+                  >
+                    {menu[1].name}
+                  </Text>
+                </Link>
               </View>
             </TouchableOpacity>
         </View>
