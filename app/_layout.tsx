@@ -4,8 +4,7 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 
 import "./global.css";
-// import GlobalProvider from "@/lib/global-provider";
-import CustomGlobal from "@/lib/custom-global";
+import GlobalProvider from "@/lib/global-provider";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -28,8 +27,8 @@ export default function RootLayout() {
   }
 
   return (
-    <CustomGlobal>
+    <GlobalProvider>
       <Stack screenOptions={{ headerShown: false }} />
-    </CustomGlobal>
+    </GlobalProvider>
   );
 }
