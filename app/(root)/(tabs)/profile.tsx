@@ -10,9 +10,8 @@ import {
 } from "react-native";
 import { Redirect } from "expo-router";
 
-// import { logout } from "@/lib/appwrite";
-// import { useGlobalContext } from "@/lib/global-provider";
-import { useGlobal } from "@/lib/custom-global";
+import { logout } from "@/lib/appwrite";
+import { useGlobalContext } from "@/lib/global-provider";
 
 import icons from "@/constants/icons";
 import { user } from "@/constants/data";
@@ -48,23 +47,20 @@ const SettingsItem = ({
 );
 
 const Profile = () => {
-  // const { user, refetch } = useGlobalContext();
-  const { isLogged, logOut } = useGlobal();
+  const { user, isLogged, refetch } = useGlobalContext();
   
   if (!isLogged) {
     return <Redirect href="/sign-in" />;
   }
 
   const handleLogout = async () => {
-    logOut();
-    return <Redirect href="/sign-in" />;
-    // const result = await logout();
-    // if (result) {
-    //   Alert.alert("Success", "Logged out successfully");
-    //   refetch();
-    // } else {
-    //   Alert.alert("Error", "Failed to logout");
-    // }
+    const result = await logout();
+    if (result) {
+      Alert.alert("Success", "Logged out successfully");
+      refetch();
+    } else {
+      Alert.alert("Error", "Failed to logout");
+    }
   };
 
   return (
@@ -80,11 +76,11 @@ const Profile = () => {
         <View className="flex flex-row justify-center mt-5">
           <View className="flex flex-col items-center relative mt-5">
             <Image
-              source={user.image}
+              source={user?.image}
               className="size-44 relative rounded-full"
             />
 
-            <Text className="text-2xl font-rubik-bold mt-2">{user.name}</Text>
+            <Text className="text-2xl font-rubik-bold mt-2">{user?.name}</Text>
           </View>
         </View>
 

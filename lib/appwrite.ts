@@ -30,32 +30,31 @@ export const account = new Account(client);
 
 export async function login() {
   try {
-    const redirectUri = Linking.createURL("/");
+    const redirectUri = Linking.createURL("/", { isTripleSlashed: true });
     console.log('Redirect URI:', redirectUri);
 
     const response = await account.createOAuth2Token(
       OAuthProvider.Google,
       redirectUri
     );
-    // if (!response) throw new Error("Create OAuth2 token failed");
+
+    if (!response) throw new Error("Create OAuth2 token failed");
 
     const browserResult = await openAuthSessionAsync(
       response.toString(),
       redirectUri
     );
 
-    throw new Error("Update Expo Go to latest version");
+    if (browserResult.type !== "success")
+      throw new Error("Create OAuth2 token failed");
 
-    // if (browserResult.type !== "success")
-    //   throw new Error("Create OAuth2 token failed");
+    const url = new URL(browserResult.url);
+    const secret = url.searchParams.get("secret")?.toString();
+    const userId = url.searchParams.get("userId")?.toString();
+    // if (!secret || !userId) throw new Error("Create OAuth2 token failed");
 
-    // const url = new URL(browserResult.url);
-    // const secret = url.searchParams.get("secret")?.toString();
-    // const userId = url.searchParams.get("userId")?.toString();
-    // // if (!secret || !userId) throw new Error("Create OAuth2 token failed");
-
-    // const session = await account.createSession(userId, secret);
-    // if (!session) throw new Error("Failed to create session");
+    const session = await account.createSession(userId, secret);
+    if (!session) throw new Error("Failed to create session");
 
     return true;
   } catch (error) {

@@ -8,30 +8,24 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 import { login } from "@/lib/appwrite";
 import { Redirect } from "expo-router";
-// import { useGlobalContext } from "@/lib/global-provider";
-import { useGlobal } from "@/lib/custom-global";
+import { useGlobalContext } from "@/lib/global-provider";
 import icons from "@/constants/icons";
 import images from "@/constants/image";
 
 const Auth = () => {
-  // const { refetch, loading, isLogged } = useGlobalContext();
-  const { isLogged, logIn } = useGlobal();
+  const { refetch, loading, isLogged } = useGlobalContext();
 
-  // if (!loading && isLogged) return <Redirect href="/" />;
-  if (isLogged) return <Redirect href="/" />;
+  if (!loading && isLogged) return <Redirect href="/" />;
 
   const handleLogin = async () => {
-    logIn();
     const result = await login();
     if (result) {
       // refetch();
       console.log('Login Success');
     } else {
-
-      // Alert.alert("Error", "Failed to login");
+      Alert.alert("Error", "Failed to login");
     }
   };
 
