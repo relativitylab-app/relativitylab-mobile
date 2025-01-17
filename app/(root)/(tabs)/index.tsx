@@ -1,20 +1,87 @@
-import { Text, View } from "react-native";
-import { Link } from 'expo-router';
+import {
+  Image,
+  Text,
+  View,
+  TouchableOpacity
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { user, menu } from "@/constants/data";
+import images from "@/constants/image";
+import { Redirect } from "expo-router";
 
 export default function Index() {
+  const goToPlayground = () => {
+    return <Redirect href="/playground" />;
+  }
+
+  const goToQuiz = () => {
+    return <Redirect href="/quiz" />;
+  }
+
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text className="font-bold text-3xl my-10 font-rubik">Welcome to Relativitylab</Text>
-      <Link href="/sign-in">Sign In</Link>
-      <Link href="/quiz">Quiz</Link>
-      <Link href="/playground">Playground</Link>
-      <Link href="/profile">Profile</Link>
-    </View>
+    <SafeAreaView className="h-full bg-white">
+      <View className="px-5">
+        <View className="flex flex-row items-center justify-between mt-5">
+          <View className="flex flex-row">
+            <Image
+              source={user.image}
+              className="size-12 rounded-full"
+            />
+
+            <View className="flex flex-col items-start ml-2 justify-center">
+              <Text className="text-xs font-rubik text-black-100">
+                Good Morning
+              </Text>
+              <Text className="text-base font-rubik-medium text-black-300">
+                {user.name}
+              </Text>
+            </View>
+          </View>
+        </View>
+        <View className="my-5">
+            <TouchableOpacity
+              onPress={goToPlayground}
+              className="flex flex-col items-start w-full h-80 relative my-2"
+            >
+              <Image source={menu[0].image} className="size-full rounded-2xl" />
+        
+              <Image
+                source={images.cardGradient}
+                className="size-full rounded-2xl absolute bottom-0"
+              />
+        
+              <View className="flex flex-col items-start absolute bottom-5 inset-x-5">
+                <Text
+                  className="text-xl font-rubik-extrabold text-white"
+                  numberOfLines={1}
+                >
+                  {menu[0].name}
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={goToQuiz}
+              className="flex flex-col items-start w-full h-80 relative my-2"
+            >
+              <Image source={menu[1].image} className="size-full rounded-2xl" />
+        
+              <Image
+                source={images.cardGradient}
+                className="size-full rounded-2xl absolute bottom-0"
+              />
+        
+              <View className="flex flex-col items-start absolute bottom-5 inset-x-5">
+                <Text
+                  className="text-xl font-rubik-extrabold text-white"
+                  numberOfLines={1}
+                >
+                  {menu[1].name}
+                </Text>
+              </View>
+            </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
