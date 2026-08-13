@@ -1,50 +1,43 @@
-# Welcome to your Expo app 👋
+# Relativity Lab Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Native Android and iOS learning application built with Expo Router, Firebase,
+and React Three Fiber. The app supports provider sign-in or guest use, cached
+questions and progress, and fully bundled three-dimensional learning scenes.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Local development
 
 ```bash
-npm run reset-project
+npm ci
+npm start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Native Firebase and provider sign-in require a development build; Expo Go is
+not a valid runtime for those features.
 
-## Learn more
+## Native configuration
 
-To learn more about developing your project with Expo, look at the following resources:
+Provide platform service files outside version control:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- Android: `google-services.json`, or set `GOOGLE_SERVICES_JSON` to its path.
+- iOS: `GoogleService-Info.plist`, or set `GOOGLE_SERVICE_INFO_PLIST` to its
+  path.
+- Google sign-in: set `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` to the Firebase web
+  client ID. Set `GOOGLE_SIGNIN_IOS_URL_SCHEME` when the iOS scheme cannot be
+  derived by the config plugin.
 
-## Join the community
+Use `EXPO_PUBLIC_RELATIVITYLAB_CONFIG_MODE=test` for credential-free lint,
+tests, and configuration inspection. Never place private keys, provider tokens,
+or native service files in source control.
 
-Join our community of developers creating universal apps.
+## Verification
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npm run lint
+npx tsc --noEmit
+npm run test:ci
+npm run test:rules
+EXPO_PUBLIC_RELATIVITYLAB_CONFIG_MODE=test npx expo config --type public
+```
+
+The Firestore emulator suite verifies public question reads, denied client
+question writes, and owner-only append-style progress updates.
