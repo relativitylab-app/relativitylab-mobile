@@ -1,0 +1,77 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owns(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function validAnswered(answered) {
+      return answered is list
+        && answered.size() <= 1000
+        && answered.size() == answered.toSet().size();
+    }
+
+    function validAnswerId(answered, index) {
+      return answered[index] is string
+        && answered[index].size() > 0
+        && answered[index].size() <= 128;
+    }
+
+    function validCreateProfile() {
+      return request.resource.data.keys().hasOnly(["answered"])
+        && request.resource.data.keys().hasAll(["answered"])
+        && validAnswered(request.resource.data.answered)
+        && (
+          request.resource.data.answered.size() == 0
+          || (
+            request.resource.data.answered.size() == 1
+            && validAnswerId(request.resource.data.answered, 0)
+          )
+        );
+    }
+
+    function validUpdateProfile() {
+      let before = resource.data.answered;
+      let after = request.resource.data.answered;
+      return request.resource.data.keys().hasOnly(["answered"])
+        && validAnswered(after)
+        && after.hasAll(before)
+        && after.size() <= before.size() + 1
+        && (
+          before.size() == 0
+          || after[0] == before[0]
+        )
+        && (
+          after.size() == before.size()
+          || validAnswerId(after, after.size() - 1)
+        )
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["answered"]);
+    }
+
+    function validProfileCreateOrUpdate() {
+      return !exists(/databases/$(database)/documents/profile/$(request.auth.uid))
+        ? validCreateProfile()
+        : validUpdateProfile();
+    }
+
+    match /questions/{questionId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /profile/{userId} {
+      allow read: if owns(userId);
+      allow create, update: if owns(userId) && validProfileCreateOrUpdate();
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
