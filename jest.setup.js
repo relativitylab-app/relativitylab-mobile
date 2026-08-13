@@ -10,3 +10,6 @@ jest.mock("@react-native-google-signin/google-signin", () => ({
     configure: jest.fn(),
   },
 }));
+
+process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? "test-google-web-client-id";

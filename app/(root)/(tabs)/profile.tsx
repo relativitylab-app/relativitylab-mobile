@@ -1,5 +1,5 @@
 import {
-  Alert,
+  ActivityIndicator,
   Image,
   ImageSourcePropType,
   SafeAreaView,
@@ -8,20 +8,16 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Redirect } from "expo-router";
-
-import { logout } from "@/lib/appwrite";
-import { useGlobalContext } from "@/lib/global-provider";
 
 import icons from "@/constants/icons";
-import { user } from "@/constants/data";
+import { useAuth } from "@/providers/AuthProvider";
 
 interface SettingsItemProp {
   icon: ImageSourcePropType;
   title: string;
-  onPress?: () => void;
+  onPress: () => void;
   textStyle?: string;
-  showArrow?: boolean;
+  disabled?: boolean;
 }
 
 const SettingsItem = ({
@@ -29,11 +25,15 @@ const SettingsItem = ({
   title,
   onPress,
   textStyle,
-  showArrow = true,
+  disabled = false,
 }: SettingsItemProp) => (
   <TouchableOpacity
+    accessibilityRole="button"
+    disabled={disabled}
     onPress={onPress}
-    className="flex flex-row items-center justify-between py-3"
+    className={`flex flex-row items-center justify-between py-3 ${
+      disabled ? "opacity-50" : ""
+    }`}
   >
     <View className="flex flex-row items-center gap-3">
       <Image source={icon} className="size-6" />
@@ -42,55 +42,109 @@ const SettingsItem = ({
       </Text>
     </View>
 
-    {showArrow && <Image source={icons.rightArrow} className="size-5" />}
+    {disabled && <ActivityIndicator size="small" color="#dc2626" />}
   </TouchableOpacity>
 );
 
+const GuestProfile = ({
+  isReturning,
+  onReturnToSignIn,
+}: {
+  isReturning: boolean;
+  onReturnToSignIn: () => void;
+}) => (
+  <View className="flex-1 items-center justify-center px-7">
+    <View className="size-28 items-center justify-center rounded-full bg-primary-100">
+      <Image source={icons.person} className="size-14" resizeMode="contain" />
+    </View>
+
+    <Text className="mt-6 text-center text-2xl font-rubik-bold text-black-300">
+      Guest profile
+    </Text>
+    <Text className="mt-3 text-center font-rubik text-base leading-6 text-black-200">
+      Sign in to keep your learning progress available across devices.
+    </Text>
+
+    <TouchableOpacity
+      accessibilityRole="button"
+      disabled={isReturning}
+      onPress={onReturnToSignIn}
+      className={`mt-8 min-h-14 w-full flex-row items-center justify-center rounded-2xl bg-primary-300 px-6 ${
+        isReturning ? "opacity-60" : ""
+      }`}
+    >
+      {isReturning ? (
+        <ActivityIndicator color="#ffffff" />
+      ) : (
+        <Text className="font-rubik-semibold text-base text-white">
+          Return to sign in
+        </Text>
+      )}
+    </TouchableOpacity>
+  </View>
+);
+
 const Profile = () => {
-  const { user, isLogged, refetch } = useGlobalContext();
-  
-  if (!isLogged) {
-    return <Redirect href="/sign-in" />;
+  const { action, returnToSignIn, signOut, status, user } = useAuth();
+
+  if (status === "guest") {
+    return (
+      <SafeAreaView className="h-full bg-white">
+        <GuestProfile
+          isReturning={action === "guest"}
+          onReturnToSignIn={() => void returnToSignIn()}
+        />
+      </SafeAreaView>
+    );
   }
 
-  const handleLogout = async () => {
-    const result = await logout();
-    if (result) {
-      Alert.alert("Success", "Logged out successfully");
-      refetch();
-    } else {
-      Alert.alert("Error", "Failed to logout");
-    }
-  };
+  if (status !== "authenticated" || user === null) {
+    return null;
+  }
+
+  const displayName = user.displayName ?? "Relativity Explorer";
+  const email = user.email ?? "No email address available";
 
   return (
     <SafeAreaView className="h-full bg-white">
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-32 px-7"
+        contentContainerClassName="px-7 pb-32"
       >
-        <View className="flex flex-row items-center justify-between mt-5">
+        <View className="mt-5 flex flex-row items-center justify-between">
           <Text className="text-xl font-rubik-bold">Profile</Text>
         </View>
 
-        <View className="flex flex-row justify-center mt-5">
-          <View className="flex flex-col items-center relative mt-5">
+        <View className="mt-10 flex flex-col items-center">
+          {user.photoURL === null ? (
+            <View className="size-44 items-center justify-center rounded-full bg-primary-100">
+              <Text className="font-rubik-bold text-5xl text-primary-300">
+                {displayName.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          ) : (
             <Image
-              source={user?.image}
-              className="size-44 relative rounded-full"
+              accessibilityLabel={`${displayName} profile photo`}
+              source={{ uri: user.photoURL }}
+              className="size-44 rounded-full"
             />
+          )}
 
-            <Text className="text-2xl font-rubik-bold mt-2">{user?.name}</Text>
-          </View>
+          <Text className="mt-4 text-center text-2xl font-rubik-bold text-black-300">
+            {displayName}
+          </Text>
+          <Text className="mt-1 text-center font-rubik text-base text-black-200">
+            {email}
+          </Text>
         </View>
 
-        <View className="flex flex-col border-t mt-5 pt-5 border-primary-200">
+        <View className="mt-8 flex flex-col border-t border-primary-200 pt-5">
           <SettingsItem
             icon={icons.logout}
-            title="Logout"
+            title="Sign out"
             textStyle="text-danger"
-            showArrow={false}
-            onPress={handleLogout}
+            disabled={action === "signOut"}
+            onPress={() => void signOut()}
           />
         </View>
       </ScrollView>

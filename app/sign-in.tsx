@@ -1,72 +1,155 @@
-import React from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useEffect, useState } from "react";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { Redirect } from "expo-router";
 import {
-  Alert,
+  ActivityIndicator,
   Image,
+  Platform,
+  Pressable,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
-import { login } from "@/lib/appwrite";
-import { Redirect } from "expo-router";
-import { useGlobalContext } from "@/lib/global-provider";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import icons from "@/constants/icons";
-import images from "@/constants/image";
+import { authStrings } from "@/constants/strings";
+import { useAuth } from "@/providers/AuthProvider";
 
 const Auth = () => {
-  const { refetch, loading, isLogged } = useGlobalContext();
+  const {
+    action,
+    continueAsGuest,
+    error,
+    signInWithApple,
+    signInWithGoogle,
+    status,
+  } = useAuth();
+  const [appleAvailable, setAppleAvailable] = useState(false);
 
-  if (!loading && isLogged) return <Redirect href="/" />;
-
-  const handleLogin = async () => {
-    const result = await login();
-    if (result) {
-      // refetch();
-      console.log('Login Success');
-    } else {
-      Alert.alert("Error", "Failed to login");
+  useEffect(() => {
+    if (Platform.OS !== "ios") {
+      return;
     }
-  };
+
+    let mounted = true;
+
+    void AppleAuthentication.isAvailableAsync().then((available) => {
+      if (mounted) {
+        setAppleAvailable(available);
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (status === "guest" || status === "authenticated") {
+    return <Redirect href="/" />;
+  }
+
+  const active = action !== "none";
+  const statusLabel =
+    action === "none" ? null : authStrings.activeLabels[action];
+  const errorMessage =
+    error === null ? null : authStrings.messages[error.category];
 
   return (
-    <SafeAreaView className="bg-white h-full">
+    <SafeAreaView className="h-full bg-black">
       <ScrollView
         contentContainerStyle={{
-          height: "100%",
+          flexGrow: 1,
+          justifyContent: "center",
+          paddingHorizontal: 24,
+          paddingVertical: 32,
         }}
       >
-        <Image
-          source={images.onboarding}
-          className="w-full h-4/6"
-          resizeMode="contain"
-        />
+        <View className="items-center">
+          <View className="mb-10 items-center">
+            <Text className="text-center font-rubik-bold text-4xl text-white">
+              {authStrings.appName}
+            </Text>
+            <Text className="mt-3 text-center font-rubik text-base text-zinc-300">
+              {authStrings.tagline}
+            </Text>
+          </View>
 
-        <View className="px-10">
-          <Text className="text-3xl font-rubik-bold text-black-300 text-center mt-2">
-            RelativityLab: {"\n"}
-            <Text className="text-primary-300">Warp Space, Bend Time.</Text>
-          </Text>
+          <View className="w-full gap-4">
+            <Pressable
+              accessibilityHint={authStrings.hints.google}
+              accessibilityRole="button"
+              accessibilityState={{ busy: action === "google", disabled: active }}
+              className="h-14 w-full flex-row items-center justify-center rounded-lg bg-white px-5"
+              disabled={active}
+              onPress={signInWithGoogle}
+            >
+              {action === "google" ? (
+                <ActivityIndicator color="#18181b" />
+              ) : (
+                <>
+                  <Image
+                    className="h-5 w-5"
+                    resizeMode="contain"
+                    source={icons.google}
+                  />
+                  <Text className="ml-3 font-rubik-medium text-base text-zinc-950">
+                    {authStrings.actions.google}
+                  </Text>
+                </>
+              )}
+            </Pressable>
 
-          <Text className="text-lg font-rubik text-black-200 text-center mt-12">
-            Login to RelativityLab with Google
-          </Text>
-
-          <TouchableOpacity
-            onPress={handleLogin}
-            className="bg-white shadow-md shadow-zinc-300 rounded-full w-full py-4 mt-5"
-          >
-            <View className="flex flex-row items-center justify-center">
-              <Image
-                source={icons.google}
-                className="w-5 h-5"
-                resizeMode="contain"
+            {Platform.OS === "ios" && appleAvailable ? (
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                cornerRadius={8}
+                onPress={() => {
+                  if (!active) {
+                    void signInWithApple();
+                  }
+                }}
+                style={{ height: 56, opacity: active ? 0.55 : 1, width: "100%" }}
               />
-              <Text className="text-lg font-rubik-medium text-black-300 ml-2">
-                Continue with Google
+            ) : null}
+
+            <Pressable
+              accessibilityHint={authStrings.hints.guest}
+              accessibilityRole="button"
+              accessibilityState={{ busy: action === "guest", disabled: active }}
+              className="h-14 w-full items-center justify-center rounded-lg border border-zinc-700 px-5"
+              disabled={active}
+              onPress={continueAsGuest}
+            >
+              {action === "guest" ? (
+                <ActivityIndicator color="#fafafa" />
+              ) : (
+                <Text className="font-rubik-medium text-base text-white">
+                  {authStrings.actions.guest}
+                </Text>
+              )}
+            </Pressable>
+          </View>
+
+          <View className="mt-8 min-h-6 items-center">
+            {statusLabel !== null ? (
+              <Text
+                accessibilityLiveRegion="polite"
+                className="font-rubik text-sm text-zinc-300"
+              >
+                {statusLabel}
               </Text>
-            </View>
-          </TouchableOpacity>
+            ) : null}
+            {errorMessage !== null ? (
+              <Text
+                accessibilityLiveRegion="polite"
+                className="mt-2 text-center font-rubik text-sm text-red-300"
+              >
+                {errorMessage}
+              </Text>
+            ) : null}
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

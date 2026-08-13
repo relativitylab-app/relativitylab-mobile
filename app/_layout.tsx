@@ -1,10 +1,43 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 
 import "./global.css";
-import GlobalProvider from "@/lib/global-provider";
+import { isStartupSettled } from "@/domain/auth";
+import { AuthProvider, useAuth } from "@/providers/AuthProvider";
+
+void SplashScreen.preventAutoHideAsync().catch(() => {
+  // The native splash may already be hidden when this module reloads.
+});
+
+interface BootstrapProps {
+  readonly fontsLoaded: boolean;
+}
+
+const Bootstrap = ({ fontsLoaded }: BootstrapProps) => {
+  const authState = useAuth();
+  const splashHiddenRef = useRef(false);
+  const startupSettled = isStartupSettled(authState);
+  const ready = fontsLoaded && startupSettled;
+
+  useEffect(() => {
+    if (!ready || splashHiddenRef.current) {
+      return;
+    }
+
+    splashHiddenRef.current = true;
+    void SplashScreen.hideAsync().catch(() => {
+      // Ignore duplicate or platform-specific hide failures.
+    });
+  }, [ready]);
+
+  if (!ready) {
+    return null;
+  }
+
+  return <Stack screenOptions={{ headerShown: false }} />;
+};
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -16,19 +49,9 @@ export default function RootLayout() {
     "Rubik-SemiBold": require("../assets/fonts/Rubik-SemiBold.ttf"),
   });
 
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded) {
-    return null;
-  }
-
   return (
-    <GlobalProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </GlobalProvider>
+    <AuthProvider>
+      <Bootstrap fontsLoaded={fontsLoaded} />
+    </AuthProvider>
   );
 }
