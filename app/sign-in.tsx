@@ -4,16 +4,20 @@ import { Redirect } from "expo-router";
 import {
   ActivityIndicator,
   Image,
+  ImageBackground,
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import icons from "@/constants/icons";
-import { authStrings } from "@/constants/strings";
+import { GlobeBackground } from "@/components/scene";
+import { sceneFallbackImage } from "@/components/scene/assets";
+import { authStrings, sceneStrings } from "@/constants/strings";
 import { useAuth } from "@/providers/AuthProvider";
 
 const Auth = () => {
@@ -26,6 +30,7 @@ const Auth = () => {
     status,
   } = useAuth();
   const [appleAvailable, setAppleAvailable] = useState(false);
+  const [sceneFailed, setSceneFailed] = useState(false);
 
   useEffect(() => {
     if (Platform.OS !== "ios") {
@@ -57,6 +62,14 @@ const Auth = () => {
 
   return (
     <SafeAreaView className="h-full bg-black">
+      <ImageBackground
+        blurRadius={2}
+        resizeMode="cover"
+        source={sceneFallbackImage}
+        style={StyleSheet.absoluteFill}
+      />
+      <GlobeBackground onError={() => setSceneFailed(true)} />
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.scrim]} />
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
@@ -133,6 +146,14 @@ const Auth = () => {
           </View>
 
           <View className="mt-8 min-h-6 items-center">
+            {sceneFailed ? (
+              <Text
+                accessibilityLiveRegion="polite"
+                className="mb-2 font-rubik text-sm text-amber-200"
+              >
+                {sceneStrings.globeUnavailable}
+              </Text>
+            ) : null}
             {statusLabel !== null ? (
               <Text
                 accessibilityLiveRegion="polite"
@@ -155,5 +176,11 @@ const Auth = () => {
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  scrim: {
+    backgroundColor: "rgba(0, 0, 0, 0.48)",
+  },
+});
 
 export default Auth;

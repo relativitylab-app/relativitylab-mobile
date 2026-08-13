@@ -37,6 +37,7 @@ export const homeStrings = {
 } as const;
 
 export const quizStrings = {
+  back: "Back",
   loading: "Loading questions...",
   current: "Questions are current.",
   cached: "Using saved questions.",
@@ -71,4 +72,36 @@ export const profileStrings = {
   syncPending: "Progress will sync when online.",
   syncFailed: "Progress sync failed.",
   retrySync: "Retry sync",
+} as const;
+
+export const sceneStrings = {
+  globeUnavailable: "3D background unavailable",
+  labTitle: "Relativity Cube Lab",
+  labSubtitle: "Explore length contraction along each spatial axis.",
+  loading: "Preparing the 3D laboratory...",
+  unavailable: "The 3D laboratory is unavailable.",
+  retry: "Retry 3D laboratory",
+  back: "Back",
+  experimentVariables: "Experiment Variables",
+  labControls: "Lab Controls",
+  initialLength: "Initial length",
+  velocity: "Velocity (fraction of c)",
+  finalLength: "Final length",
+  lorentzFactor: "Lorentz factor gamma",
+  rotationSpeed: "Rotation speed",
+  sceneScale: "Scene scale",
+  pauseRotation: "Pause rotation",
+  resumeRotation: "Resume rotation",
+  rotationReduced: "Automatic rotation is disabled by Reduce Motion.",
+  reset: "Reset experiment",
+  zoomIn: "Zoom in",
+  zoomOut: "Zoom out",
+  home: "Back to Home",
+  quiz: "Open Quiz",
+  invalidNumber: "Enter a finite number to keep the current cube value.",
+  clamped: "Value adjusted to the supported range.",
+  initialLengthRange: "Minimum 0.001; no fixed scientific maximum.",
+  velocityRange: "From 0 through 0.999 times the speed of light.",
+  rotationRange: "From 0.01 through 5.",
+  scaleRange: "From 0.05 through 2.",
 } as const;

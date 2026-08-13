@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   Text,
   View,
@@ -79,6 +80,14 @@ export default function Quiz() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, QuestionAnswerState>>({});
   const inFlightSubmitsRef = useRef(new Map<string, Promise<void>>());
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace("/");
+  };
 
   const questions = state.kind === "ready" ? state.questions : [];
   const currentQuestion = questions[currentIndex] ?? null;
@@ -307,6 +316,17 @@ export default function Quiz() {
 
   return (
     <SafeAreaView className="h-full bg-white">
+      <Pressable
+        accessibilityHint="Returns to the previous screen, or Home when no history is available."
+        accessibilityLabel={quizStrings.back}
+        accessibilityRole="button"
+        className="mx-5 mt-3 min-h-12 self-start justify-center rounded-lg border border-primary-200 px-4"
+        onPress={handleBack}
+      >
+        <Text className="font-rubik-medium text-base text-primary-300">
+          ‹ {quizStrings.back}
+        </Text>
+      </Pressable>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1"

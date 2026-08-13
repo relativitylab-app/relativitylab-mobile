@@ -108,6 +108,13 @@ const mockRouteModules = () => {
     },
     isAvailableAsync: isAppleAvailableAsync,
   }));
+  jest.doMock("@/components/scene", () => ({
+    GlobeBackground: ({ onError }: { readonly onError: () => void }) =>
+      React.createElement("GlobeBackground", { onError }),
+  }));
+  jest.doMock("@/components/scene/assets", () => ({
+    sceneFallbackImage: { uri: "scene-fallback" },
+  }));
   jest.doMock("react-native", () => {
     const actual = jest.requireActual("react-native");
     const mock = Object.create(actual);

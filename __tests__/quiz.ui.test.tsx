@@ -34,12 +34,15 @@ const retry = jest.fn(async () => undefined);
 const retrySync = jest.fn(async () => undefined);
 const recordSolved = jest.fn(async () => undefined);
 const setParams = jest.fn();
+const back = jest.fn();
+const replace = jest.fn();
 const LinkMock = ({ children }: { readonly children: React.ReactNode }) => <>{children}</>;
 let questionState: QuestionState = { kind: "loading" };
 let solvedQuestionIds = new Set<string>();
 let pendingQuestionIds = new Set<string>();
 let syncStatus: "pending" | "synced" | "failed" = "synced";
 let routeParams: { readonly id?: string } = {};
+let canGoBack = true;
 
 const questions = [
   {
@@ -98,7 +101,12 @@ const loadQuiz = () => {
   jest.doMock("expo-router", () => ({
     Link: LinkMock,
     useLocalSearchParams: () => routeParams,
-    useRouter: () => ({ setParams }),
+    useRouter: () => ({
+      back,
+      canGoBack: () => canGoBack,
+      replace,
+      setParams,
+    }),
   }));
   jest.doMock("@/providers/QuestionProvider", () => ({
     useQuestions: () => ({ state: questionState, retry }),
@@ -135,6 +143,7 @@ describe("quiz UI", () => {
     pendingQuestionIds = new Set();
     syncStatus = "synced";
     routeParams = {};
+    canGoBack = true;
   });
 
   afterEach(() => {
@@ -149,6 +158,7 @@ describe("quiz UI", () => {
     const Quiz = loadQuiz();
     let renderer = render(<Quiz />);
     expect(textContent(renderer)).toContain("Loading questions...");
+    expect(findByAccessibilityLabel(renderer, "Back")).toBeDefined();
 
     questionState = {
       kind: "ready",
@@ -175,6 +185,17 @@ describe("quiz UI", () => {
     questionState = { kind: "error", reason: "data", retryable: true };
     renderer = render(<Quiz />);
     expect(textContent(renderer)).toContain("Question data could not be loaded.");
+  });
+
+  it("uses navigation history for Back and falls back to Home", () => {
+    const Quiz = loadQuiz();
+    const renderer = render(<Quiz />);
+    act(() => findByAccessibilityLabel(renderer, "Back").props.onPress());
+    expect(back).toHaveBeenCalledTimes(1);
+
+    canGoBack = false;
+    act(() => findByAccessibilityLabel(renderer, "Back").props.onPress());
+    expect(replace).toHaveBeenCalledWith("/");
   });
 
   it("uses deep-linked question IDs and retains editable incorrect answers", async () => {
