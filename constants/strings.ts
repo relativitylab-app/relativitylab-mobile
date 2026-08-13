@@ -27,3 +27,48 @@ export const authStrings = {
     unknown: "Something went wrong. Please try again.",
   },
 } as const;
+
+export const homeStrings = {
+  greetingFallback: "Relativity Explorer",
+  labTitle: "Lab",
+  labDescription: "Open the relativity playground.",
+  quizTitle: "Quiz",
+  quizDescription: "Solve numeric relativity questions.",
+} as const;
+
+export const quizStrings = {
+  loading: "Loading questions...",
+  current: "Questions are current.",
+  cached: "Using saved questions.",
+  firstRunOffline: "Questions are not available offline yet",
+  dataError: "Question data could not be loaded.",
+  networkError: "Question loading failed. Check your connection and try again.",
+  retryQuestions: "Retry question load",
+  retryProgress: "Retry progress sync",
+  invalidAnswer: "Enter a valid number.",
+  blankAnswer: "Enter an answer before submitting.",
+  incorrect: "Not quite. Edit your answer and try again.",
+  correct: "Correct. Progress recorded.",
+  saving: "Recording progress...",
+  saveError: "Correct, but progress could not sync. Retry progress sync.",
+  syncPending: "Progress will sync when online.",
+  solved: "Solved",
+  unsolved: "Unsolved",
+  submit: "Submit answer",
+  previous: "Previous",
+  next: "Next",
+  home: "Home",
+} as const;
+
+export const profileStrings = {
+  guestDescription:
+    "Guest progress is stored on this device. Sign in to preserve and merge progress across devices.",
+  solvedHeading: "Solved questions",
+  solvedEmpty: "Solved questions will appear here.",
+  solvedCount: "Solved",
+  unknownQuestion: "Unknown question",
+  syncSynced: "Progress synced.",
+  syncPending: "Progress will sync when online.",
+  syncFailed: "Progress sync failed.",
+  retrySync: "Retry sync",
+} as const;

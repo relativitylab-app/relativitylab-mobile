@@ -6,6 +6,8 @@ import * as SplashScreen from "expo-splash-screen";
 import "./global.css";
 import { isStartupSettled } from "@/domain/auth";
 import { AuthProvider, useAuth } from "@/providers/AuthProvider";
+import { ProgressProvider } from "@/providers/ProgressProvider";
+import { QuestionProvider } from "@/providers/QuestionProvider";
 
 void SplashScreen.preventAutoHideAsync().catch(() => {
   // The native splash may already be hidden when this module reloads.
@@ -51,7 +53,11 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <Bootstrap fontsLoaded={fontsLoaded} />
+      <QuestionProvider>
+        <ProgressProvider>
+          <Bootstrap fontsLoaded={fontsLoaded} />
+        </ProgressProvider>
+      </QuestionProvider>
     </AuthProvider>
   );
 }

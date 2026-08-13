@@ -71,6 +71,16 @@ const mockRouteModules = () => {
       clearError,
     }),
   }));
+  jest.doMock("@/providers/ProgressProvider", () => ({
+    ProgressProvider: ({ children }: { readonly children: React.ReactNode }) => (
+      <>{children}</>
+    ),
+  }));
+  jest.doMock("@/providers/QuestionProvider", () => ({
+    QuestionProvider: ({ children }: { readonly children: React.ReactNode }) => (
+      <>{children}</>
+    ),
+  }));
   jest.doMock("expo-router", () => ({
     Redirect: (props: { readonly href: string }) =>
       React.createElement(RedirectMock, props),
