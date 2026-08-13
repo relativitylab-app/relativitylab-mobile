@@ -2,6 +2,7 @@
 
 # dependencies
 node_modules/
+node_modules
 
 # Expo
 .expo/
@@ -35,6 +36,11 @@ yarn-error.*
 # Firebase native service files
 google-services.json
 GoogleService-Info.plist
+
+# Firebase emulator artifacts
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
 
 # typescript
 *.tsbuildinfo
