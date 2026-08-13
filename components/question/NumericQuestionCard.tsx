@@ -7,11 +7,16 @@ import {
   View,
 } from "react-native";
 import {
+  AlertCircle,
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Circle,
+  LoaderCircle,
   Send,
+  XCircle,
+  type LucideIcon,
 } from "lucide-react-native";
 
 import { Question } from "@/domain/questions";
@@ -62,6 +67,27 @@ const feedbackClassName: Record<AnswerFeedback, string> = {
   saveError: "text-danger",
 };
 
+// Shape, not colour, has to carry the correct/incorrect distinction.
+const feedbackIcon: Record<AnswerFeedback, LucideIcon | null> = {
+  idle: null,
+  blank: AlertCircle,
+  invalid: AlertCircle,
+  incorrect: XCircle,
+  correct: CheckCircle2,
+  saving: LoaderCircle,
+  saveError: AlertTriangle,
+};
+
+const feedbackIconColor: Record<AnswerFeedback, string> = {
+  idle: "#666876",
+  blank: "#b45309",
+  invalid: "#b45309",
+  incorrect: "#f75555",
+  correct: "#15803d",
+  saving: "#0061ff",
+  saveError: "#f75555",
+};
+
 export const NumericQuestionCard = ({
   canGoNext,
   canGoPrevious,
@@ -82,6 +108,7 @@ export const NumericQuestionCard = ({
   const statusColor = solved ? "#16a34a" : "#666876";
   const currentFeedback = solved && feedback === "idle" ? "correct" : feedback;
   const message = feedbackText[currentFeedback];
+  const FeedbackIcon = feedbackIcon[currentFeedback];
 
   return (
     <View className="rounded-lg border border-primary-200 bg-white p-5">
@@ -127,12 +154,26 @@ export const NumericQuestionCard = ({
       />
 
       {message !== null && (
-        <Text
-          accessibilityLiveRegion="polite"
-          className={`mt-3 font-rubik-medium text-sm ${feedbackClassName[currentFeedback]}`}
-        >
-          {message}
-        </Text>
+        <View className="mt-3 flex-row items-center gap-2">
+          {FeedbackIcon !== null && (
+            <View
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              testID={`answer-feedback-icon-${currentFeedback}`}
+            >
+              <FeedbackIcon
+                size={18}
+                color={feedbackIconColor[currentFeedback]}
+              />
+            </View>
+          )}
+          <Text
+            accessibilityLiveRegion="polite"
+            className={`min-w-0 flex-1 font-rubik-medium text-sm ${feedbackClassName[currentFeedback]}`}
+          >
+            {message}
+          </Text>
+        </View>
       )}
 
       <TouchableOpacity

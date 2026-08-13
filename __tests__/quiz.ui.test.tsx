@@ -95,6 +95,14 @@ const findByAccessibilityLabel = (
 ): ReactTestInstance =>
   renderer.root.find((node) => node.props.accessibilityLabel === label);
 
+const findAllByTestId = (
+  renderer: ReactTestRenderer,
+  testID: string,
+): ReactTestInstance[] =>
+  renderer.root.findAll(
+    (node) => typeof node.type === "string" && node.props.testID === testID,
+  );
+
 const loadQuiz = () => {
   jest.resetModules();
   jest.doMock("react", () => React);
@@ -289,6 +297,107 @@ describe("quiz UI", () => {
     const submit = findByAccessibilityLabel(renderer, "Submit answer");
     expect(submit.props.accessibilityState).toEqual({ disabled: true });
     expect(textContent(renderer)).toContain("Enter a valid number.");
+  });
+
+  it("renders a distinct icon beside correct and incorrect feedback text", async () => {
+    questionState = {
+      kind: "ready",
+      questions,
+      source: "current",
+      invalidCount: 0,
+      cachedAt: null,
+      refreshing: false,
+      refreshError: false,
+    };
+    const Quiz = loadQuiz();
+    const renderer = render(<Quiz />);
+
+    expect(findAllByTestId(renderer, "answer-feedback-icon-correct")).toHaveLength(0);
+    expect(findAllByTestId(renderer, "answer-feedback-icon-incorrect")).toHaveLength(0);
+
+    act(() => {
+      renderer.root.findByType(TextInput).props.onChangeText("63");
+    });
+    act(() => {
+      findByAccessibilityLabel(renderer, "Submit answer").props.onPress();
+    });
+
+    const incorrectIcons = findAllByTestId(renderer, "answer-feedback-icon-incorrect");
+    expect(incorrectIcons).toHaveLength(1);
+    expect(incorrectIcons[0].props.accessibilityElementsHidden).toBe(true);
+    expect(incorrectIcons[0].props.importantForAccessibility).toBe(
+      "no-hide-descendants",
+    );
+    expect(textContent(renderer)).toContain(
+      "Not quite. Edit your answer and try again.",
+    );
+    expect(findAllByTestId(renderer, "answer-feedback-icon-correct")).toHaveLength(0);
+
+    act(() => {
+      renderer.root.findByType(TextInput).props.onChangeText("64");
+    });
+    await act(async () => {
+      findByAccessibilityLabel(renderer, "Submit answer").props.onPress();
+      await flush();
+    });
+
+    const correctIcons = findAllByTestId(renderer, "answer-feedback-icon-correct");
+    expect(correctIcons).toHaveLength(1);
+    expect(textContent(renderer)).toContain("Correct. Progress recorded.");
+    expect(findAllByTestId(renderer, "answer-feedback-icon-incorrect")).toHaveLength(0);
+  });
+
+  it("renders a validation icon beside blank and invalid answer guidance", () => {
+    questionState = {
+      kind: "ready",
+      questions,
+      source: "current",
+      invalidCount: 0,
+      cachedAt: null,
+      refreshing: false,
+      refreshError: false,
+    };
+    const Quiz = loadQuiz();
+    const renderer = render(<Quiz />);
+
+    act(() => {
+      renderer.root.findByType(TextInput).props.onChangeText("not-a-number");
+    });
+
+    expect(findAllByTestId(renderer, "answer-feedback-icon-invalid")).toHaveLength(1);
+    expect(textContent(renderer)).toContain("Enter a valid number.");
+
+    act(() => {
+      renderer.root.findByType(TextInput).props.onChangeText("");
+    });
+
+    expect(findAllByTestId(renderer, "answer-feedback-icon-blank")).toHaveLength(1);
+    expect(textContent(renderer)).toContain("Enter an answer before submitting.");
+  });
+
+  it("keeps the feedback text in a polite live region alongside its icon", () => {
+    solvedQuestionIds = new Set(["length-contraction"]);
+    questionState = {
+      kind: "ready",
+      questions,
+      source: "current",
+      invalidCount: 0,
+      cachedAt: null,
+      refreshing: false,
+      refreshError: false,
+    };
+    const Quiz = loadQuiz();
+    const renderer = render(<Quiz />);
+
+    expect(findAllByTestId(renderer, "answer-feedback-icon-correct")).toHaveLength(1);
+
+    const liveRegions = renderer.root.findAll(
+      (node) =>
+        node.props.accessibilityLiveRegion === "polite" &&
+        collectText(node.props.children).join("") === "Correct. Progress recorded.",
+    );
+
+    expect(liveRegions.length).toBeGreaterThanOrEqual(1);
   });
 
   it("keeps pending sync status separate from correct-answer feedback", async () => {
