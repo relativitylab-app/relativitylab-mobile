@@ -174,6 +174,24 @@ export const createQuestionRepository = (
     }
   };
 
+  const emitPendingUnavailableAfterCache = (): void => {
+    if (!firstSnapshotResolved || state.kind !== "loading") {
+      return;
+    }
+
+    const unavailable = pendingUnavailable;
+    pendingUnavailable = null;
+    emit(
+      unavailable?.reason === "data"
+        ? {
+            kind: "error",
+            reason: "data",
+            retryable: unavailable.retryable,
+          }
+        : { kind: "empty-offline", retryable: true },
+    );
+  };
+
   const applySnapshot = async (
     snapshot: QuestionSnapshot,
     snapshotGeneration: number,
@@ -264,19 +282,7 @@ export const createQuestionRepository = (
           return;
         }
 
-        if (firstSnapshotResolved && state.kind === "loading") {
-          const unavailable = pendingUnavailable;
-          pendingUnavailable = null;
-          emit(
-            unavailable?.reason === "data"
-              ? {
-                  kind: "error",
-                  reason: "data",
-                  retryable: unavailable.retryable,
-                }
-              : { kind: "empty-offline", retryable: true },
-          );
-        }
+        emitPendingUnavailableAfterCache();
       })
       .catch(() => {
         if (disposed || activeGeneration !== generation) {
@@ -284,19 +290,7 @@ export const createQuestionRepository = (
         }
 
         cacheResolved = true;
-        if (firstSnapshotResolved && state.kind === "loading") {
-          const unavailable = pendingUnavailable;
-          pendingUnavailable = null;
-          emit(
-            unavailable?.reason === "data"
-              ? {
-                  kind: "error",
-                  reason: "data",
-                  retryable: unavailable.retryable,
-                }
-              : { kind: "empty-offline", retryable: true },
-          );
-        }
+        emitPendingUnavailableAfterCache();
       });
 
     unsubscribe = getGateway().subscribe(

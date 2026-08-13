@@ -87,12 +87,13 @@ export const extractGoogleIdToken = (response: GoogleSignInResponse): string => 
     );
   }
 
-  const idToken =
-    "data" in response && response.data !== undefined && response.data !== null
-      ? response.data.idToken
-      : "idToken" in response
-        ? response.idToken
-        : null;
+  let idToken: string | null | undefined = null;
+
+  if ("data" in response && response.data !== undefined && response.data !== null) {
+    idToken = response.data.idToken;
+  } else if ("idToken" in response) {
+    idToken = response.idToken;
+  }
 
   if (typeof idToken !== "string" || idToken.length === 0) {
     throw createAuthError(
