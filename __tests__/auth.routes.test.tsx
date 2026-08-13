@@ -288,6 +288,83 @@ describe("auth routes", () => {
     expect(textContent(renderer)).toContain(authStrings.activeLabels.google);
   });
 
+  it("keeps sign-in controls usable after the globe scene fails", async () => {
+    const { authStrings, sceneStrings } = require("@/constants/strings");
+    const SignIn = await loadSignInRoute();
+    let renderer: ReactTestRenderer;
+
+    await act(async () => {
+      renderer = create(<SignIn />);
+      await flush();
+    });
+
+    expect(textContent(renderer!)).not.toContain(sceneStrings.globeUnavailable);
+
+    const globe = renderer!.root.findByType(
+      "GlobeBackground" as unknown as React.ElementType,
+    );
+
+    await act(async () => {
+      globe.props.onError();
+      await flush();
+    });
+
+    expect(textContent(renderer!)).toContain(sceneStrings.globeUnavailable);
+
+    const buttons = renderer!.root.findAllByType(Pressable);
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0].props.disabled).toBe(false);
+    expect(buttons[1].props.disabled).toBe(false);
+    expect(textContent(renderer!)).toEqual(
+      expect.arrayContaining([
+        authStrings.actions.google,
+        authStrings.actions.guest,
+      ]),
+    );
+
+    await act(async () => {
+      buttons[0].props.onPress();
+      buttons[1].props.onPress();
+      await flush();
+    });
+
+    expect(signInWithGoogle).toHaveBeenCalledTimes(1);
+    expect(continueAsGuest).toHaveBeenCalledTimes(1);
+  });
+
+  it("announces the failed globe in a live region without hiding sign-in errors", async () => {
+    const { authStrings, sceneStrings } = require("@/constants/strings");
+    authState = {
+      ...baseAuthState,
+      error: { category: "network", retryable: true },
+    };
+    const SignIn = await loadSignInRoute();
+    let renderer: ReactTestRenderer;
+
+    await act(async () => {
+      renderer = create(<SignIn />);
+      await flush();
+    });
+
+    await act(async () => {
+      renderer!.root
+        .findByType("GlobeBackground" as unknown as React.ElementType)
+        .props.onError();
+      await flush();
+    });
+
+    const announced = renderer!.root
+      .findAll((node) => node.props.accessibilityLiveRegion === "polite")
+      .map((node) => textFromChildren(node.props.children));
+
+    expect(announced).toEqual(
+      expect.arrayContaining([
+        sceneStrings.globeUnavailable,
+        authStrings.messages.network,
+      ]),
+    );
+  });
+
   it("renders centralized error copy in a live region", async () => {
     const { authStrings } = require("@/constants/strings");
     authState = {
