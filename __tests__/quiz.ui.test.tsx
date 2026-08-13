@@ -41,6 +41,7 @@ let questionState: QuestionState = { kind: "loading" };
 let solvedQuestionIds = new Set<string>();
 let pendingQuestionIds = new Set<string>();
 let syncStatus: "pending" | "synced" | "failed" = "synced";
+let progressSource: "guest" | "firebase" = "guest";
 let routeParams: { readonly id?: string } = {};
 let canGoBack = true;
 
@@ -121,7 +122,7 @@ const loadQuiz = () => {
   }));
   jest.doMock("@/providers/ProgressProvider", () => ({
     useProgress: () => ({
-      source: "guest",
+      source: progressSource,
       solvedQuestionIds,
       pendingQuestionIds,
       syncStatus,
@@ -150,6 +151,7 @@ describe("quiz UI", () => {
     solvedQuestionIds = new Set();
     pendingQuestionIds = new Set();
     syncStatus = "synced";
+    progressSource = "guest";
     routeParams = {};
     canGoBack = true;
   });
@@ -398,6 +400,55 @@ describe("quiz UI", () => {
     );
 
     expect(liveRegions.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("preserves the active question and draft across a guest-to-account transition", async () => {
+    questionState = {
+      kind: "ready",
+      questions,
+      source: "current",
+      invalidCount: 0,
+      cachedAt: null,
+      refreshing: false,
+      refreshError: false,
+    };
+    const Quiz = loadQuiz();
+    const renderer = render(<Quiz />);
+
+    await act(async () => {
+      await flush();
+    });
+
+    act(() => {
+      findByAccessibilityLabel(renderer, "Next").props.onPress();
+    });
+    act(() => {
+      renderer.root.findByType(TextInput).props.onChangeText("35.5");
+    });
+
+    expect(textContent(renderer)).toEqual(
+      expect.arrayContaining(["Question 2 of 2", "How many minutes pass?"]),
+    );
+    expect(textContent(renderer)).toContain("0 of 2 solved");
+
+    // The auth observer swaps guest storage for the signed-in account while
+    // the quiz stays mounted; the in-progress draft must survive it.
+    progressSource = "firebase";
+    solvedQuestionIds = new Set(["length-contraction"]);
+    syncStatus = "pending";
+
+    await act(async () => {
+      renderer.update(<Quiz />);
+      await flush();
+    });
+
+    expect(textContent(renderer)).toEqual(
+      expect.arrayContaining(["Question 2 of 2", "How many minutes pass?"]),
+    );
+    expect(renderer.root.findByType(TextInput).props.value).toBe("35.5");
+    expect(textContent(renderer)).toContain("1 of 2 solved");
+    expect(textContent(renderer)).toContain("Progress will sync when online.");
+    expect(recordSolved).not.toHaveBeenCalled();
   });
 
   it("keeps pending sync status separate from correct-answer feedback", async () => {
