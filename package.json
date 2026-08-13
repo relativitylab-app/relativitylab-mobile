@@ -57,6 +57,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@babel/plugin-transform-class-static-block": "7.26.0",
     "@firebase/rules-unit-testing": "4.0.1",
     "@types/jest": "^29.5.12",
     "@types/react": "~18.3.12",
