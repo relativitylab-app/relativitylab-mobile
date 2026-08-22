@@ -1,6 +1,6 @@
 import React from "react";
 import { TouchableOpacity } from "react-native";
-import { create, ReactTestRenderer } from "react-test-renderer";
+import { act, create, ReactTestRenderer } from "react-test-renderer";
 
 const LinkMock = ({ children }: { readonly children: React.ReactNode }) => <>{children}</>;
 let authState = {
@@ -48,7 +48,10 @@ describe("home UI", () => {
 
   it("renders identity greeting and native Lab/Quiz entries", () => {
     const Home = loadHome();
-    const renderer = create(<Home />);
+    let renderer!: ReactTestRenderer;
+    act(() => {
+      renderer = create(<Home />);
+    });
 
     expect(textContent(renderer)).toEqual(
       expect.arrayContaining(["Ada", "Lab", "Quiz"]),

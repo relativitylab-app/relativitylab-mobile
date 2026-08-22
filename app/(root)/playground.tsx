@@ -222,6 +222,9 @@ const Playground = () => {
     !variablesOpen && !controlsOpen && sceneStatus.kind === "ready";
   const panResponder = useMemo(
     () =>
+      // dragOriginRef is only read inside gesture callbacks, which run on touch
+      // events rather than during render.
+      // eslint-disable-next-line react-hooks/refs
       PanResponder.create({
         onMoveShouldSetPanResponder: (_event, gesture) =>
           interactionsEnabled && Math.abs(gesture.dx) + Math.abs(gesture.dy) > 5,

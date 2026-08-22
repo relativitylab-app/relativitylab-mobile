@@ -1,5 +1,4 @@
 import React from "react";
-import { Pressable } from "react-native";
 import { act, create, ReactTestRenderer } from "react-test-renderer";
 
 type AuthStatus = "initializing" | "signedOut" | "guest" | "authenticated";
@@ -183,6 +182,21 @@ const textFromChildren = (children: unknown): string =>
   collectText(children).join("");
 
 describe("auth routes", () => {
+  // React Native wraps Pressable in React.memo, which findAllByType does not
+  // match, so query the component the memo wraps. loadSignInRoute() also calls
+  // jest.resetModules(), so resolve it from the live registry.
+  const pressable = (): React.ComponentType =>
+    (require("react-native").Pressable as { readonly type: React.ComponentType })
+      .type;
+
+  const mount = (component: React.ReactElement): ReactTestRenderer => {
+    let renderer!: ReactTestRenderer;
+    act(() => {
+      renderer = create(component);
+    });
+    return renderer;
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     authState = baseAuthState;
@@ -194,7 +208,7 @@ describe("auth routes", () => {
   it("redirects sign-in guests to the app root", async () => {
     authState = { ...baseAuthState, status: "guest", hasChosenGuest: true };
     const SignIn = await loadSignInRoute();
-    const renderer = create(<SignIn />);
+    const renderer = mount(<SignIn />);
 
     expect(renderer.root.findByType(RedirectMock).props.href).toBe("/");
   });
@@ -202,7 +216,7 @@ describe("auth routes", () => {
   it("redirects authenticated users from sign-in to the app root", async () => {
     authState = { ...baseAuthState, status: "authenticated" };
     const SignIn = await loadSignInRoute();
-    const renderer = create(<SignIn />);
+    const renderer = mount(<SignIn />);
 
     expect(renderer.root.findByType(RedirectMock).props.href).toBe("/");
   });
@@ -210,8 +224,8 @@ describe("auth routes", () => {
   it("renders accessible Google and guest sign-in buttons when signed out", async () => {
     const { authStrings } = require("@/constants/strings");
     const SignIn = await loadSignInRoute();
-    const renderer = create(<SignIn />);
-    const buttons = renderer.root.findAllByType(Pressable);
+    const renderer = mount(<SignIn />);
+    const buttons = renderer.root.findAllByType(pressable());
 
     expect(buttons).toHaveLength(2);
     expect(buttons[0].props.accessibilityRole).toBe("button");
@@ -229,7 +243,7 @@ describe("auth routes", () => {
   it("does not check or render Apple sign-in outside iOS", async () => {
     platformOS = "android";
     const SignIn = await loadSignInRoute();
-    const renderer = create(<SignIn />);
+    const renderer = mount(<SignIn />);
 
     expect(isAppleAvailableAsync).not.toHaveBeenCalled();
     expect(renderer.root.findAllByType(AppleAuthenticationButtonMock)).toHaveLength(0);
@@ -272,8 +286,8 @@ describe("auth routes", () => {
     const { authStrings } = require("@/constants/strings");
     authState = { ...baseAuthState, action: "google" };
     const SignIn = await loadSignInRoute();
-    const renderer = create(<SignIn />);
-    const buttons = renderer.root.findAllByType(Pressable);
+    const renderer = mount(<SignIn />);
+    const buttons = renderer.root.findAllByType(pressable());
 
     expect(buttons[0].props.disabled).toBe(true);
     expect(buttons[0].props.accessibilityState).toEqual({
@@ -311,7 +325,7 @@ describe("auth routes", () => {
 
     expect(textContent(renderer!)).toContain(sceneStrings.globeUnavailable);
 
-    const buttons = renderer!.root.findAllByType(Pressable);
+    const buttons = renderer!.root.findAllByType(pressable());
     expect(buttons).toHaveLength(2);
     expect(buttons[0].props.disabled).toBe(false);
     expect(buttons[1].props.disabled).toBe(false);
@@ -372,7 +386,7 @@ describe("auth routes", () => {
       error: { category: "network", retryable: true },
     };
     const SignIn = await loadSignInRoute();
-    const renderer = create(<SignIn />);
+    const renderer = mount(<SignIn />);
     const errorText = renderer.root.findAll(
       (node) =>
         node.props.accessibilityLiveRegion === "polite" &&
@@ -389,7 +403,7 @@ describe("auth routes", () => {
   it("redirects signed-out users from the root group to sign-in", async () => {
     authState = { ...baseAuthState, status: "signedOut" };
     const RootGroupLayout = await loadRootGroupLayout();
-    const renderer = create(<RootGroupLayout />);
+    const renderer = mount(<RootGroupLayout />);
 
     expect(renderer.root.findByType(RedirectMock).props.href).toBe("/sign-in");
   });
@@ -397,7 +411,7 @@ describe("auth routes", () => {
   it("renders root group slots for guest users", async () => {
     authState = { ...baseAuthState, status: "guest", hasChosenGuest: true };
     const RootGroupLayout = await loadRootGroupLayout();
-    const renderer = create(<RootGroupLayout />);
+    const renderer = mount(<RootGroupLayout />);
 
     expect(renderer.root.findAllByType(SlotMock)).toHaveLength(1);
   });
@@ -405,7 +419,7 @@ describe("auth routes", () => {
   it("renders root group slots for authenticated users", async () => {
     authState = { ...baseAuthState, status: "authenticated" };
     const RootGroupLayout = await loadRootGroupLayout();
-    const renderer = create(<RootGroupLayout />);
+    const renderer = mount(<RootGroupLayout />);
 
     expect(renderer.root.findAllByType(SlotMock)).toHaveLength(1);
   });

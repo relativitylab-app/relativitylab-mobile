@@ -7,7 +7,7 @@ import {
   signInWithCredential,
   signOut as firebaseSignOut,
 } from "@react-native-firebase/auth";
-import type { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import type { User } from "@react-native-firebase/auth";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import {
   CryptoDigestAlgorithm,
@@ -140,7 +140,7 @@ export const createFirebaseAuthGateway = (
 
   return {
     observeAuthState: (observer) =>
-      onAuthStateChanged(getAuth(), (user: FirebaseAuthTypes.User | null) => {
+      onAuthStateChanged(getAuth(), (user: User | null) => {
         observer(user);
       }),
 
@@ -189,4 +189,4 @@ export const createFirebaseAuthGateway = (
 
 export const firebaseAuthGateway: AuthGateway = createFirebaseAuthGateway();
 
-export type FirebaseAuthUser = FirebaseAuthTypes.User;
+export type FirebaseAuthUser = User;

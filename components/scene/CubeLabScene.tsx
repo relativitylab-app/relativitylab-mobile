@@ -71,6 +71,9 @@ const CubeContent = ({
   );
 
   useEffect(() => {
+    // useThree returns live three.js objects; mutating them is the documented
+    // React Three Fiber API, not an accidental write to hook state.
+    // eslint-disable-next-line react-hooks/immutability
     scene.background = cubeTexture;
     scene.environment = cubeTexture;
 
@@ -87,6 +90,8 @@ const CubeContent = ({
   useFirstSuccessfulSceneFrame(onReady);
 
   useEffect(() => {
+    // Same as above: the camera from useThree is a live three.js object.
+    // eslint-disable-next-line react-hooks/immutability
     camera.position.z = cameraDistance;
     camera.updateProjectionMatrix();
   }, [camera, cameraDistance]);
@@ -148,6 +153,9 @@ export const CubeLabScene = ({
   }, [onError, onReady]);
 
   useEffect(() => {
+    // Retry clears the recovery state that guards a failed GL context; the
+    // reset must happen on retryKey change, not during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFailed(false);
     setReady(false);
   }, [retryKey]);
@@ -219,6 +227,6 @@ export const CubeLabScene = ({
 
 const styles = StyleSheet.create({
   fill: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
 });

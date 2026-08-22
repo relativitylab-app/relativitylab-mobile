@@ -99,6 +99,9 @@ export default function Quiz() {
       return;
     }
 
+    // Synchronises the visible question with the deep-link parameter once the
+    // dataset resolves; the router query is an external source, not derived state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentIndex(findQuestionIndex(state.questions, queryQuestionId));
   }, [queryQuestionId, state]);
 

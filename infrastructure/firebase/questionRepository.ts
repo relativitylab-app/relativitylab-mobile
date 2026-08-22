@@ -1,4 +1,4 @@
-import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+import type { QuerySnapshot } from "@react-native-firebase/firestore";
 import {
   collection,
   getDocsFromServer,
@@ -80,7 +80,7 @@ export const createFirebaseQuestionGateway = (): QuestionFirestoreGateway => {
       onSnapshot(
         questionsQuery,
         { includeMetadataChanges: true },
-        (snapshot: FirebaseFirestoreTypes.QuerySnapshot) => next(snapshot),
+        (snapshot: QuerySnapshot) => next(snapshot),
         error,
       ),
     refresh: async () => getDocsFromServer(questionsQuery),

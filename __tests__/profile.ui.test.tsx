@@ -118,7 +118,10 @@ describe("profile UI", () => {
   const renderers: ReactTestRenderer[] = [];
 
   const render = (component: React.ReactElement): ReactTestRenderer => {
-    const renderer = create(component);
+    let renderer!: ReactTestRenderer;
+    act(() => {
+      renderer = create(component);
+    });
     renderers.push(renderer);
     return renderer;
   };

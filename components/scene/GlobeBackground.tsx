@@ -142,6 +142,6 @@ export const GlobeBackground = ({ onError }: GlobeBackgroundProps) => {
 
 const styles = StyleSheet.create({
   fill: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
 });

@@ -33,6 +33,9 @@ export const useFirstSuccessfulSceneFrame = (onReady: () => void) => {
   const onReadyRef = useRef(onReady);
 
   if (readinessRef.current === null) {
+    // Lazy ref initialisation: the closure only dereferences onReadyRef when a
+    // frame later invokes it, never during render.
+    // eslint-disable-next-line react-hooks/refs
     readinessRef.current = createSceneFrameReadiness(() => onReadyRef.current());
   }
 
