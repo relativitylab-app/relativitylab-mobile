@@ -39,12 +39,12 @@ export default ({ config }: ExpoConfigContext) => ({
   newArchEnabled: true,
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.relativitylab.app",
+    bundleIdentifier: "com.faizath.relativitylab",
     usesAppleSignIn: true,
     ...(usesSafeConfig ? {} : { googleServicesFile: iosServiceFile }),
   },
   android: {
-    package: "com.relativitylab.app",
+    package: "com.faizath.relativitylab",
     ...(usesSafeConfig ? {} : { googleServicesFile: androidServiceFile }),
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon.png",

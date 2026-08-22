@@ -117,6 +117,35 @@ describe("native security boundaries", () => {
     expect(gitignore).toMatch(/^GoogleService-Info\.plist$/m);
   });
 
+  it("matches the Android package against the injected service file when present", () => {
+    const servicePath = path.join(repositoryRoot, "google-services.json");
+
+    if (!fs.existsSync(servicePath)) {
+      // The file is deliberately absent from version control, so this check
+      // only runs where a real one has been injected.
+      return;
+    }
+
+    const service = JSON.parse(fs.readFileSync(servicePath, "utf8")) as {
+      readonly client?: readonly {
+        readonly client_info?: {
+          readonly android_client_info?: { readonly package_name?: string };
+        };
+      }[];
+    };
+    const registered = (service.client ?? [])
+      .map((entry) => entry.client_info?.android_client_info?.package_name)
+      .filter((name): name is string => typeof name === "string");
+    const configured = read("app.config.ts").match(/package:\s*"([^"]+)"/)?.[1];
+
+    // Gradle resolves the service file by applicationId, so a mismatch fails
+    // the Android build rather than surfacing anywhere earlier.
+    expect({ configured, registered }).toEqual({
+      configured,
+      registered: expect.arrayContaining([configured]),
+    });
+  });
+
   it("names only packages that actually ship an Expo config plugin", () => {
     const appConfig = read("app.config.ts");
     const named = [
