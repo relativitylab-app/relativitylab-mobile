@@ -3,12 +3,12 @@ type BabelApi = {
 };
 
 describe("babel config", () => {
-  it("keeps the native export class static block transform enabled", () => {
+  it("relies on the Expo preset alone for native class static blocks", () => {
     const babelConfig = require("../babel.config.js") as (
       api: BabelApi,
     ) => {
       readonly presets: readonly unknown[];
-      readonly plugins: readonly string[];
+      readonly plugins?: readonly string[];
     };
     const cache = jest.fn();
 
@@ -19,6 +19,9 @@ describe("babel config", () => {
       ["babel-preset-expo", { jsxImportSource: "nativewind" }],
       "nativewind/babel",
     ]);
-    expect(config.plugins).toContain("@babel/plugin-transform-class-static-block");
+    // babel-preset-expo handles the Three.js static blocks that previously
+    // needed @babel/plugin-transform-class-static-block, so the standalone
+    // transform must not come back.
+    expect(config.plugins ?? []).toEqual([]);
   });
 });
