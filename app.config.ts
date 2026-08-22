@@ -1,6 +1,9 @@
 declare const process: {
   env: Record<string, string | undefined>;
 };
+declare const require: (id: string) => {
+  existsSync: (path: string) => boolean;
+};
 
 type ExpoConfigContext = {
   config: Record<string, unknown>;
@@ -10,6 +13,18 @@ const configMode = process.env.EXPO_PUBLIC_RELATIVITYLAB_CONFIG_MODE;
 const usesSafeConfig = configMode === "local" || configMode === "test";
 const androidServiceFile = process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json";
 const iosServiceFile = process.env.GOOGLE_SERVICE_INFO_PLIST ?? "./GoogleService-Info.plist";
+// Naming a service file that is not on disk makes Expo report an unparseable
+// config on every command. Builders receive the files through the environment
+// variables above, so presence is the honest signal for whether to declare them.
+const hasFile = (path: string): boolean => {
+  try {
+    return require("node:fs").existsSync(path);
+  } catch {
+    return false;
+  }
+};
+const androidServiceFilePresent = hasFile(androidServiceFile);
+const iosServiceFilePresent = hasFile(iosServiceFile);
 const googleSignInPlugin = process.env.GOOGLE_SIGNIN_IOS_URL_SCHEME
   ? [
       "@react-native-google-signin/google-signin",
@@ -22,8 +37,10 @@ const googleSignInPlugin = process.env.GOOGLE_SIGNIN_IOS_URL_SCHEME
 const firebaseAppPlugin = [
   "@react-native-firebase/app",
   {
-    androidGoogleServicesFile: androidServiceFile,
-    iosGoogleServicesFile: iosServiceFile,
+    ...(androidServiceFilePresent
+      ? { androidGoogleServicesFile: androidServiceFile }
+      : {}),
+    ...(iosServiceFilePresent ? { iosGoogleServicesFile: iosServiceFile } : {}),
   },
 ];
 
@@ -41,11 +58,15 @@ export default ({ config }: ExpoConfigContext) => ({
     supportsTablet: true,
     bundleIdentifier: "com.faizath.relativitylab",
     usesAppleSignIn: true,
-    ...(usesSafeConfig ? {} : { googleServicesFile: iosServiceFile }),
+    ...(usesSafeConfig || !iosServiceFilePresent
+      ? {}
+      : { googleServicesFile: iosServiceFile }),
   },
   android: {
     package: "com.faizath.relativitylab",
-    ...(usesSafeConfig ? {} : { googleServicesFile: androidServiceFile }),
+    ...(usesSafeConfig || !androidServiceFilePresent
+      ? {}
+      : { googleServicesFile: androidServiceFile }),
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon.png",
       backgroundColor: "#ffffff",
