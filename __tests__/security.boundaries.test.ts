@@ -116,4 +116,29 @@ describe("native security boundaries", () => {
     expect(gitignore).toMatch(/^google-services\.json$/m);
     expect(gitignore).toMatch(/^GoogleService-Info\.plist$/m);
   });
+
+  it("names only packages that actually ship an Expo config plugin", () => {
+    const appConfig = read("app.config.ts");
+    const named = [
+      ...appConfig.matchAll(/"(@react-native-firebase\/[a-z]+|@react-native-google-signin\/[a-z-]+)"/g),
+    ].map((match) => match[1]);
+    const pluginPackages = [...new Set(named)].filter(
+      (name) => name !== "@react-native-firebase/app",
+    );
+
+    // The app plugin is referenced through a variable, so assert it separately.
+    expect(appConfig).toContain('"@react-native-firebase/app"');
+    expect(pluginPackages.length).toBeGreaterThan(0);
+
+    for (const name of ["@react-native-firebase/app", ...pluginPackages]) {
+      // A package without app.plugin.js makes Expo load its entry point
+      // instead, which fails config resolution outside credential-free mode.
+      expect({
+        name,
+        hasPlugin: fs.existsSync(
+          path.join(repositoryRoot, "node_modules", name, "app.plugin.js"),
+        ),
+      }).toEqual({ name, hasPlugin: true });
+    }
+  });
 });

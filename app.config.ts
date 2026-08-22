@@ -60,7 +60,9 @@ export default ({ config }: ExpoConfigContext) => ({
     "expo-router",
     ...(usesSafeConfig ? [] : [firebaseAppPlugin]),
     ...(usesSafeConfig ? [] : ["@react-native-firebase/auth"]),
-    ...(usesSafeConfig ? [] : ["@react-native-firebase/firestore"]),
+    // @react-native-firebase/firestore ships no config plugin; its native
+    // setup comes from the app plugin. Listing it makes Expo fall back to the
+    // package entry point, which fails to load.
     ...(usesSafeConfig ? [] : [googleSignInPlugin]),
     "expo-apple-authentication",
     [
