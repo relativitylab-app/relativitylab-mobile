@@ -1,11 +1,17 @@
 import React from "react";
 import { act, create, ReactTestRenderer } from "react-test-renderer";
 
-const canvasProps: Record<string, unknown>[] = [];
+const mockCanvas = { props: [] as Record<string, unknown>[], mounts: 0 };
 
 jest.mock("@react-three/fiber/native", () => ({
   Canvas: (props: Record<string, unknown>) => {
-    canvasProps.push(props);
+    const react = require("react") as typeof React;
+    mockCanvas.props.push(props);
+    // An empty dependency list runs once per mount, so a changed key shows up
+    // here as a fresh mount rather than as another render.
+    react.useEffect(() => {
+      mockCanvas.mounts += 1;
+    }, []);
     return null;
   },
   useFrame: jest.fn(),
@@ -21,6 +27,9 @@ jest.mock("@react-three/fiber/native", () => ({
   addAfterEffect: jest.fn(() => jest.fn()),
 }));
 
+const CUBE_LABEL =
+  "Three-dimensional relativity cube with red X, green Y, and blue Z axes";
+
 describe("scene interaction", () => {
   let renderer: ReactTestRenderer | null = null;
 
@@ -30,20 +39,8 @@ describe("scene interaction", () => {
     });
   };
 
-  afterEach(() => {
-    act(() => renderer?.unmount());
-    renderer = null;
-    canvasProps.length = 0;
-  });
-
-  // React Three Fiber's native Canvas lays an absolutely positioned overlay
-  // over itself carrying a PanResponder that claims touches in the capture
-  // phase. Under the new architecture a descendant opting in overrides an
-  // ancestor opting out, so the wrapper's pointerEvents cannot stop it and the
-  // scenes must decline the overlay themselves.
-  it("declines the Canvas pointer overlay in the cube lab", () => {
+  const renderCube = () => {
     const { CubeLabScene } = require("@/components/scene/CubeLabScene");
-
     render(
       <CubeLabScene
         autoRotate={false}
@@ -56,10 +53,37 @@ describe("scene interaction", () => {
         rotationSpeed={0}
       />,
     );
+  };
 
-    expect(canvasProps).not.toHaveLength(0);
-    expect(canvasProps.map((props) => props.pointerEvents)).toEqual(
-      canvasProps.map(() => "none"),
+  const resizeTo = (height: number) => {
+    const wrapper = renderer!.root.find(
+      (node) => node.props.accessibilityLabel === CUBE_LABEL,
+    );
+    act(() => {
+      wrapper.props.onLayout({
+        nativeEvent: { layout: { height, width: 320, x: 0, y: 0 } },
+      });
+    });
+  };
+
+  afterEach(() => {
+    act(() => renderer?.unmount());
+    renderer = null;
+    mockCanvas.props.length = 0;
+    mockCanvas.mounts = 0;
+  });
+
+  // React Three Fiber's native Canvas lays an absolutely positioned overlay
+  // over itself carrying a PanResponder that claims touches in the capture
+  // phase. Under the new architecture a descendant opting in overrides an
+  // ancestor opting out, so the wrapper's pointerEvents cannot stop it and the
+  // scenes must decline the overlay themselves.
+  it("declines the Canvas pointer overlay in the cube lab", () => {
+    renderCube();
+
+    expect(mockCanvas.props).not.toHaveLength(0);
+    expect(mockCanvas.props.map((props) => props.pointerEvents)).toEqual(
+      mockCanvas.props.map(() => "none"),
     );
   });
 
@@ -68,9 +92,34 @@ describe("scene interaction", () => {
 
     render(<GlobeBackground onError={jest.fn()} />);
 
-    expect(canvasProps).not.toHaveLength(0);
-    expect(canvasProps.map((props) => props.pointerEvents)).toEqual(
-      canvasProps.map(() => "none"),
+    expect(mockCanvas.props).not.toHaveLength(0);
+    expect(mockCanvas.props.map((props) => props.pointerEvents)).toEqual(
+      mockCanvas.props.map(() => "none"),
     );
+  });
+
+  it("rebuilds the surface when the region changes height", () => {
+    renderCube();
+    resizeTo(600);
+    const afterTall = mockCanvas.mounts;
+
+    resizeTo(180);
+
+    // EXGL builds its drawing buffer once and cannot resize it, so a surface
+    // made for the tall region is stretched into the short one and flattens
+    // the scene until it is rebuilt.
+    expect(mockCanvas.mounts).toBeGreaterThan(afterTall);
+  });
+
+  it("keeps the surface across layout jitter", () => {
+    renderCube();
+    resizeTo(600);
+    const settled = mockCanvas.mounts;
+
+    resizeTo(610);
+    resizeTo(595);
+
+    // Rebuilding drops the GL context, so only a meaningful change may do it.
+    expect(mockCanvas.mounts).toBe(settled);
   });
 });

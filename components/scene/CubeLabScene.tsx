@@ -8,7 +8,7 @@ import React, {
   useState,
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber/native";
-import { StyleSheet, View } from "react-native";
+import { LayoutChangeEvent, StyleSheet, View } from "react-native";
 import { MeshPhysicalMaterial } from "three";
 
 import { spaceCubeMapFaces } from "@/components/scene/assets";
@@ -142,6 +142,7 @@ export const CubeLabScene = ({
   const { active, reduceMotion } = useSceneLifecycle();
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
+  const [surfaceHeight, setSurfaceHeight] = useState(0);
   const motionEnabled = !reduceMotion;
   const animated = autoRotate && motionEnabled;
   const onErrorRef = useRef(onError);
@@ -183,12 +184,22 @@ export const CubeLabScene = ({
     setReady(true);
     onReadyRef.current();
   }, []);
+  // EXGL builds its drawing buffer once, when the surface is created, and
+  // offers no way to resize it. Collapsing a lab panel changes the height of
+  // this region, and without a rebuild the original buffer is stretched into
+  // the new box, which flattens the cube and the light. Quantised so ordinary
+  // layout jitter does not rebuild the context.
+  const handleLayout = useCallback((event: LayoutChangeEvent) => {
+    const measured = Math.round(event.nativeEvent.layout.height / 40) * 40;
+    setSurfaceHeight((current) => (current === measured ? current : measured));
+  }, []);
 
   return (
     <View
       accessibilityLabel="Three-dimensional relativity cube with red X, green Y, and blue Z axes"
       accessibilityRole="image"
       accessible
+      onLayout={handleLayout}
       pointerEvents="none"
       style={styles.fill}
     >
@@ -203,7 +214,7 @@ export const CubeLabScene = ({
             }}
             frameloop={selectSceneFrameLoop(active, animated)}
             gl={{ alpha: false, antialias: true }}
-            key={retryKey}
+            key={`${retryKey}:${surfaceHeight}`}
             // The Canvas lays a touch-capturing overlay over itself for React
             // Three Fiber's own pointer events, which this scene does not use.
             // Under the new architecture that overlay re-enables itself despite
