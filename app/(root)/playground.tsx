@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   NativeSyntheticEvent,
   PanResponder,
+  PanResponderInstance,
   Platform,
   Pressable,
   ScrollView,
@@ -220,26 +221,41 @@ const Playground = () => {
   const lab = useMemo(() => createLabState(inputs, autoRotate), [autoRotate, inputs]);
   const interactionsEnabled =
     !variablesOpen && !controlsOpen && sceneStatus.kind === "ready";
-  const panResponder = useMemo(
-    () =>
-      // dragOriginRef is only read inside gesture callbacks, which run on touch
-      // events rather than during render.
-      // eslint-disable-next-line react-hooks/refs
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_event, gesture) =>
-          interactionsEnabled && Math.abs(gesture.dx) + Math.abs(gesture.dy) > 5,
-        onPanResponderGrant: () => {
-          dragOriginRef.current = orientation;
-          setAutoRotate(false);
-        },
-        onPanResponderMove: (_event, gesture) => {
-          setOrientation(
-            applyLabDrag(dragOriginRef.current, gesture.dx, gesture.dy),
-          );
-        },
-      }),
-    [interactionsEnabled, orientation],
-  );
+  // PanResponder keeps the accumulating dx/dy of the active gesture inside its
+  // own closure, so rebuilding it mid-drag installs a fresh gesture state and
+  // discards the distance travelled so far. Anything the handlers need that
+  // changes during a drag is read through a ref to keep this instance stable.
+  const orientationRef = useRef(orientation);
+  const interactionsEnabledRef = useRef(interactionsEnabled);
+
+  useEffect(() => {
+    orientationRef.current = orientation;
+    interactionsEnabledRef.current = interactionsEnabled;
+  }, [interactionsEnabled, orientation]);
+
+  const panResponderRef = useRef<PanResponderInstance | null>(null);
+
+  if (panResponderRef.current === null) {
+    // The refs below are only read inside gesture callbacks, which run on
+    // touch events rather than during render.
+    // eslint-disable-next-line react-hooks/refs
+    panResponderRef.current = PanResponder.create({
+      onMoveShouldSetPanResponder: (_event, gesture) =>
+        interactionsEnabledRef.current &&
+        Math.abs(gesture.dx) + Math.abs(gesture.dy) > 5,
+      onPanResponderGrant: () => {
+        dragOriginRef.current = orientationRef.current;
+        setAutoRotate(false);
+      },
+      onPanResponderMove: (_event, gesture) => {
+        setOrientation(
+          applyLabDrag(dragOriginRef.current, gesture.dx, gesture.dy),
+        );
+      },
+    });
+  }
+
+  const panResponder = panResponderRef.current;
 
   const setIssue = useCallback((key: string, issue: "invalid" | "clamped" | null) => {
     setErrors((current) => ({
@@ -380,6 +396,9 @@ const Playground = () => {
         accessibilityLabel="Relativity cube interaction area"
         accessibilityRole="image"
         style={styles.sceneRegion}
+        // Created once and never reassigned, so the handlers read here are
+        // stable for the lifetime of the screen.
+        // eslint-disable-next-line react-hooks/refs
         {...panResponder.panHandlers}
       >
         <Pressable

@@ -2,6 +2,8 @@ import React from "react";
 import { Text, TextInput } from "react-native";
 import { act, create, ReactTestInstance, ReactTestRenderer } from "react-test-renderer";
 
+import { applyLabDrag, DEFAULT_LAB_ORIENTATION } from "@/domain/scene";
+
 jest.setTimeout(20_000);
 
 const replace = jest.fn();
@@ -14,6 +16,7 @@ let reduceMotion = false;
 let reduceMotionListener: ((enabled: boolean) => void) | null = null;
 let canGoBack = true;
 let panResponderConfig: Record<string, (...args: any[]) => unknown> | null = null;
+let panResponderCreateCount = 0;
 
 const flush = async () => {
   await Promise.resolve();
@@ -85,6 +88,7 @@ const loadPlayground = () => {
         create: jest.fn(
           (config: Record<string, (...args: any[]) => unknown>) => {
             panResponderConfig = config;
+            panResponderCreateCount += 1;
             return { panHandlers: {} };
           },
         ),
@@ -105,6 +109,7 @@ describe("playground UI", () => {
     reduceMotionListener = null;
     canGoBack = true;
     panResponderConfig = null;
+    panResponderCreateCount = 0;
   });
 
   afterEach(() => {
@@ -191,6 +196,36 @@ describe("playground UI", () => {
     const resume = findLabel(renderer, "Resume rotation");
     act(() => resume.props.onPress());
     expect(sceneProps.at(-1)?.autoRotate).toBe(true);
+  });
+
+  it("accumulates a whole drag without rebuilding the gesture recogniser", async () => {
+    const Playground = loadPlayground();
+    await act(async () => {
+      renderer = renderComponent(<Playground />);
+      await flush();
+    });
+    act(() => (sceneProps.at(-1)?.onReady as () => void)());
+
+    const createdBeforeDrag = panResponderCreateCount;
+    act(() => {
+      panResponderConfig?.onPanResponderGrant();
+    });
+
+    // PanResponder accumulates dx inside its own closure. If the recogniser is
+    // rebuilt between moves that closure is replaced and the travelled
+    // distance restarts, which leaves the cube almost stationary on device.
+    for (const dx of [40, 90, 160]) {
+      act(() => {
+        panResponderConfig?.onPanResponderMove({}, { dx, dy: 0 });
+      });
+    }
+
+    expect(panResponderCreateCount).toBe(createdBeforeDrag);
+
+    const rotated = sceneProps.at(-1)?.orientation as { readonly y: number };
+    const reference = applyLabDrag(DEFAULT_LAB_ORIENTATION, 160, 0);
+    expect(rotated.y).toBeCloseTo(reference.y, 6);
+    expect(Math.abs(rotated.y)).toBeGreaterThan(1);
   });
 
   it("retains navigation and clears failed texture cache before retry", async () => {
