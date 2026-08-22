@@ -123,6 +123,9 @@ export const GlobeBackground = ({ onError }: GlobeBackgroundProps) => {
             camera={{ far: 100, fov: 42, near: 0.1, position: [0, 0, 8] }}
             frameloop={selectSceneFrameLoop(active, animated)}
             gl={{ alpha: true, antialias: true }}
+            // Decorative background: keep its pointer overlay from taking
+            // touches away from the sign-in controls drawn above it.
+            pointerEvents="none"
             style={styles.fill}
           >
             <color args={["#02030a"]} attach="background" />

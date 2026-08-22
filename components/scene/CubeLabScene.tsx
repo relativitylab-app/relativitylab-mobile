@@ -204,6 +204,12 @@ export const CubeLabScene = ({
             frameloop={selectSceneFrameLoop(active, animated)}
             gl={{ alpha: false, antialias: true }}
             key={retryKey}
+            // The Canvas lays a touch-capturing overlay over itself for React
+            // Three Fiber's own pointer events, which this scene does not use.
+            // Under the new architecture that overlay re-enables itself despite
+            // the wrapper below opting out, swallowing the drag gesture that
+            // rotates the cube.
+            pointerEvents="none"
             style={styles.fill}
           >
             <Suspense fallback={null}>
